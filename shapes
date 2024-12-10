@@ -1,0 +1,29 @@
+class Rectangle():
+    def __init__(self, position, size):
+        self.x, self.y = position
+        self.w, self.h = size
+
+    def union(self, other):
+        xMin = min(self.x, other.x)
+        yMin = min(self.y, other.y)
+        xMax = max(self.x + self.w, other.x + other.w)
+        yMax = max(self.y + self.h, other.y + other.h)
+
+        self.x = xMin
+        self.y = yMin
+        self.w = xMax - xMin
+        self.h = yMax - yMin
+
+    def collision_multiple(self, arr):
+        hits = []
+        for n in range(len(arr)):
+            other = arr[n]
+            if (self.x + self.w > other.x and
+                self.x < other.x + other.w and
+                self.y + self.h > other.y and
+                self.y < other.y + other.h):
+                hits.append(n)
+        return hits
+
+    def get_dimensions(self):
+        return (self.x, self.y, self.w, self.h)
