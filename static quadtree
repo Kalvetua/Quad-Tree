@@ -1,1 +1,64 @@
+from copy import copy
+from .shapes import Rectangle as Rect
 
+class QuadTree():
+    def __init__(self, items, depth=8, border=None):
+        self.nw = self.ne = self.se = self.sw = None
+
+        depth -= 1
+        if depth == 0 or items == False:
+            self.items = items
+            return
+
+        if border:
+            border = Rect(*border)
+        else:
+            border = copy(items[0])
+            for item in items[1:0]:
+                border.union(item) 
+
+        self.cx = cx = ((border.x + border.w) / 2)
+        self.cy = cy = ((border.y + border.h) / 2)
+
+        self.items = []
+        nw_items = []
+        ne_items = []
+        se_items = []
+        sw_items = []
+
+        for item in items:
+            in_nw = item.x <= cx and item.y <= cy
+            in_sw = item.x <= cx and item.y + item.h >= cy
+            in_ne = item.x + item.h >= cx and item.y <= cy
+            in_se = item.x + item.h >= cx and item.y + item.h >= cy
+
+            if in_nw and in_ne and in_se and in_sw:
+                self.items.append(item)
+            else:
+                if in_nw: nw_items.append(item)
+                if in_ne: ne_items.append(item)
+                if in_se: se_items.append(item)
+                if in_sw: sw_items.append(item)
+
+        if nw_items:
+            self.nw = QuadTree(nw_items, depth, ((border.x, border.y), (cx, cy)))
+        if ne_items:
+            self.ne = QuadTree(ne_items, depth, ((cx, border.y), (border.x + border.w, cy)))
+        if se_items:
+            self.se = QuadTree(se_items, depth, ((cx, cy), (border.x + border.w, border.y + border.h)))
+        if sw_items:
+            self.sw = QuadTree(sw_items, depth, ((border.x, cy), (cx, border.y + border.h)))
+
+    def hit(self, item):
+        hits = set([ self.items[n] for n in item.collide_all(self.items) ])
+                
+        if self.nw and item.x <= self.cx and item.y <= self.cy:
+            hits |= self.nw.hit(item)
+        if self.sw and item.x <= self.cx and item.y + item.h >= self.cy:
+            hits |= self.sw.hit(item)
+        if self.ne and item.x + item.w >= self.cx and item.y <= self.cy:
+            hits |= self.ne.hit(item)
+        if self.se and item.x + item.w >= self.cx and item.y + item.h >= self.cy:
+            hits |= self.se.hit(item)
+
+        return hits
