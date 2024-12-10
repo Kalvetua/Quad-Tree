@@ -50,7 +50,7 @@ class QuadTree():
             self.sw = QuadTree(sw_items, depth, ((border.x, cy), (cx, border.y + border.h)))
 
     def hit(self, item):
-        hits = set([ self.items[n] for n in item.collide_all(self.items) ])
+        hits = set([ self.items[n] for n in item.collision_multiple(self.items) ])
                 
         if self.nw and item.x <= self.cx and item.y <= self.cy:
             hits |= self.nw.hit(item)
